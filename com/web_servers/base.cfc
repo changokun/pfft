@@ -62,21 +62,6 @@ component output="false" displayname="" {
 		supports_ssl = false,
 		enforces_ssl = false,
 		design_name = 'longs',
-		hosting_mode = 'development',
-		note = 'as development, only visible on office vpn. tbh, the variation in the domain name can be minted on the fly.',
-		created_date = '2005-03-05',
-		expiration_date = '2017-05-31',
-		type = 'Corporate (Property Management Corporate Site)',
-		polymorphic_id = 666
-	},{
-		id=77,
-		name='Fair Hope Building',
-		sys_name='fairhope',
-		canonical_domain_name = 'demo.fairhope.com',
-		alias_domain_names = ['demo.fair-hope.com'],
-		supports_ssl = false,
-		enforces_ssl = false,
-		design_name = 'longs',
 		hosting_mode = 'demonstration',
 		note = 'as demonstration, only visible with simple http basic auth eg login: pw password: digital',
 		created_date = '2005-03-05',
@@ -153,6 +138,17 @@ component output="false" displayname="" {
 		// need web_server_config
 		if( ! structKeyExists(application.config, 'web_server_config')) {
 			throw "no web_server_config found";
+		}
+
+		// on production and staging, must have basic auth config.
+		if(application.mode eq 'production' or application.mode eq 'staging') {
+			if( 
+				! structKeyExists(application.config.web_server_config, 'basic_auth_login') 
+				or ! structKeyExists(application.config.web_server_config, 'basic_auth_user_file')
+				or ! fileExists(application.config.web_server_config.basic_auth_user_file)
+			) {
+				throw "need simple basic auth login and password (etc).";
+			}
 		}
 		switch(application.config.web_server_config.type){
 			case 'apache':

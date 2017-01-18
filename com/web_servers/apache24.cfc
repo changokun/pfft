@@ -8,6 +8,63 @@
 
 component output="true" displayname="" extends="base"  {
 
+
+	public void function establish_vhosts_files() {
+		// this is for ubuntu apache 2.4s that use a sites-available type of thing.
+		var site = '';
+		var aliases = '';
+		var file_content = '';
+		var server_name = '';
+
+		if( ! structKeyExists(application.config.web_server_config, 'sites_available_folder')) {
+			throw "need sites_available_folder config.";
+		}
+
+		for(site in this.sites) {
+			writeOutput(site.name & '<code>#application.config.web_server_config.sites_available_folder##site.sysname#.conf</code><br><xmp>');
+			file_content = '## Generated on #server.machineName# #dateFormat(now(), 'full')# at #timeFormat(now(), 'full')#
+<VirtualHost *:80>
+	ServerName #site.canonical_domain_name#
+	DocumentRoot #application.config.pfft_root#sites/#site.sys_name#/www/
+	ErrorLog ${APACHE_LOG_DIR}/#site.sys_name#-error.log
+	CustomLog ${APACHE_LOG_DIR}/#site.sys_name#-access.log vhost_combined
+	<Directory #application.config.pfft_root#sites/#site.sys_name#/www/ >';
+	if(site.hosting_mode eq 'demonstration' or application.mode eq 'staging') {
+		file_content &= '
+		AuthType Basic
+		AuthName "Restricted Demonstration"
+		AuthUserFile "#application.config.web_server_config.basic_auth_user_file#"
+		Require user #application.config.web_server_config.basic_auth_login#';
+	} else {
+		file_content &= '
+		Require all granted';
+	}
+	file_content &= '
+	</Directory>
+</VirtualHost>';
+			if(arrayLen(site.alias_domain_names)) {
+				aliases = site.alias_domain_names;
+				server_name = aliases[1];
+				arrayDeleteAt(aliases, 1);
+				file_content &= replace('
+				<VirtualHost *:80>
+					ServerName #server_name#
+					', '				', '', 'all');
+					if(arrayLen(aliases)) {
+						file_content &= 'ServerAlias #arrayToList(aliases, ' ')#';
+					}
+					file_content &= replace('Redirect "/" "http://#site.canonical_domain_name#"
+					</VirtualHost>
+				', '					', '', 'all');
+			}
+			writeOutput(trim(file_content));
+			writeOutput('</xmp><br><br>');
+		}
+		return;
+	}
+	
+	
+
 	public string function get_local_vhosts() {
 		// on Tezcatlipoca, return all of them in one long string. (the first one, which will act as default, will be the scanner?/webserver admin?)
 		// on Modigliani, return individual vhost entries for sites-available.
@@ -54,7 +111,7 @@ component output="true" displayname="" extends="base"  {
 										ServerName #reReplace(server_name, '\.\w{2,7}$', '.dev')#
 										', '									', '', 'all');
 										if(arrayLen(aliases)) {
-											output &= 'ServerAlias #reReplace(arrayToList(site.alias_domain_names, ' '), '\.\w{2,7}\b', '.dev', 'all')#';
+											output &= 'ServerAlias #reReplace(arrayToList(aliases, ' '), '\.\w{2,7}\b', '.dev', 'all')#';
 										}
 										output &= replace('
 										Redirect "/" "http://#reReplace(site.canonical_domain_name, '\.\w{2,7}$', '.dev')#"
