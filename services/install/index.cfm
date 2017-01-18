@@ -1,3 +1,5 @@
+
+
 services - install local websites.
 
 
@@ -6,9 +8,13 @@ services - install local websites.
 
 <cfdump var="#web_server#" label="Line 7 of /Users/alexbrown/Public/www/pfft/services/install/index.cfm" expand="false">
 
-allow that webserver to make a nice page.
+
+<h3>VirtualHosts</h3>
+<!--- we might make one file or a hundred. --->
+<cfdump var="#application.config#" label="Line 14 of /Users/alexbrown/Public/www/pfft/services/install/index.cfm">
+
+<cfabort />
 <cfoutput>
-	<p>i know it's apace shtuff.</p>
 	<textarea cols="100" rows="20">#web_server.get_local_vhosts()#</textarea>
 	<p>On the live server I would write that to #application.config.web_server_config.vhosts_file_path#.</p>
 	<hr>
