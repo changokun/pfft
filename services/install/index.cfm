@@ -12,14 +12,10 @@ services - install local websites.
 
 <h3>VirtualHosts</h3>
 
-<cfset web_server.establish_vhosts_files()>
-
-<cfabort />
 <!--- we might make one file or a hundred. --->
 <cfif structKeyExists(application.config.web_server_config, 'sites_available_folder')>
 	<!--- for each site, make sure a vhostsst file exists in sites-available. we'll enable/disable later. --->
 	<cfset web_server.establish_vhosts_files()>
-
 <cfelseif structKeyExists(application.config.web_server_config, 'vhosts_file_path')>
 	<textarea cols="100" rows="20">#web_server.get_local_vhosts()#</textarea>
 <cfelse>
