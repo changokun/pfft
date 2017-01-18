@@ -21,7 +21,7 @@ component output="true" displayname="" extends="base"  {
 		}
 
 		for(site in this.sites) {
-			writeOutput(site.name & '<code>#application.config.web_server_config.sites_available_folder##site.sysname#.conf</code><br><xmp>');
+			writeOutput(site.name & '<code>#application.config.web_server_config.sites_available_folder##site.sys_name#.conf</code><br><xmp>');
 			file_content = '## Generated on #server.machineName# #dateFormat(now(), 'full')# at #timeFormat(now(), 'full')#
 <VirtualHost *:80>
 	ServerName #site.canonical_domain_name#
