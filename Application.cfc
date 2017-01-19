@@ -20,6 +20,14 @@
 				enablecfoutputonly="false"
 				/>
 
+	<cffunction name="onAbort">
+		<cfargument name="targetPage" required="false">
+		
+		<cfoutput><hr>NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO #arguments.targetPage#</cfoutput>
+
+		
+	</cffunction>
+
 
 		<cffunction name="onApplicationStart" access="public" returntype="boolean" output="false" hint="Fires when the application is first created. I will load configuration and instantiate some core objects for you to use when ever you like.">
 

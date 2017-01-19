@@ -1,14 +1,8 @@
-/**
-*
-* @file  /Users/alexbrown/Public/www/pfft/com/web_servers/base.cfc
-* @author
-* @description
-*
-*/
+<cfcomponent>
 
-component output="false" displayname="" {
+	<cfset this.sites = []>
 
-	this.sites = [{
+	<cfset this.fake_data = [{
 		id=123,
 		name='Uno, you know, for kids',
 		sys_name='uno',
@@ -128,63 +122,86 @@ component output="false" displayname="" {
 		expiration_date = '',
 		type = 'promotional',
 		polymorphic_id = 100
-	}];
+	}]>
 
 
-	public web_servers.base function get_web_server() {
-		// based on config and server vars, instantiate an appropriate web_server object and return it.
-		// writeDump(cgi);
-		// writeDump(application.config);
-		// need web_server_config
-		if( ! structKeyExists(application.config, 'web_server_config')) {
-			throw "no web_server_config found";
-		}
-
-		// on production and staging, must have basic auth config.
-		if(application.mode eq 'production' or application.mode eq 'staging') {
-			if( 
-				! structKeyExists(application.config.web_server_config, 'basic_auth_login') 
-				or ! structKeyExists(application.config.web_server_config, 'basic_auth_user_file')
-				or ! fileExists(application.config.web_server_config.basic_auth_user_file)
-			) {
-				throw "need simple basic auth login and password (etc).";
-			}
-		}
-		switch(application.config.web_server_config.type){
-			case 'apache':
-				// double check against cgi.server_software
-				if(cgi.server_software does not contain application.config.web_server_config.type) {
-					throw "web server config/cgi mismatch";
-				}
-				// and version.
-				if(application.config.web_server_config.version != '2.4' or cgi.server_software does not contain application.config.web_server_config.version) {
-					throw "unsupported apache version."; // this only means you should double check if any of this stuff changed in 2.5 or whatever you are using.
-				}
-				//okay.
-				return new com.web_servers.apache24();
-				break;
-
-				default:
-				throw "unsupported web server.";
-				break;
-			}
-
-			return;
-		}
+	
+	<cffunction name="install_all">
+		<cfthrow message="someone forgot to develop a method." />
+	</cffunction>
 
 
-		public function init(){
-			var site = '';
-			var temp = [];
-			for(site in this.sites) {
-				temp.append(new site(argumentCollection=site));
-			}
-			this.sites = temp;
-			return this;
-		}
+	<cffunction name="get_web_server" access="public">
+		<!--- based on config and server vars, instantiate an appropriate web_server object and return it. --->
+		<!--- // need web_server_config --->
+		<cfif(not structKeyExists(application.config, 'web_server_config'))>
+			<cfthrow message="no web_server_config found" />
+		</cfif>
+
+		<!--- on production and staging, must have basic auth config. --->
+		<cfif application.mode eq 'production' or application.mode eq 'staging'>
+			<cfif not structKeyExists(application.config.web_server_config, 'basic_auth_login') 
+				or not structKeyExists(application.config.web_server_config, 'basic_auth_user_file')
+				or not fileExists(application.config.web_server_config.basic_auth_user_file)>
+				<cfthrow message="need simple basic auth login and password (etc)." />
+			</cfif>
+		</cfif>
+
+		<!---  double check against cgi.server_software --->
+		<cfif cgi.server_software does not contain application.config.web_server_config.type>
+			<cfthrow message="web server config/cgi mismatch" />
+		</cfif>
+
+		<!---  double check version against cgi.server_software --->
+		<cfif cgi.server_software does not contain application.config.web_server_config.version>
+			<cfthrow message="web server version config/cgi mismatch" />
+		</cfif>
+
+		<cfswitch expression="#application.config.web_server_config.type#">
+			<cfcase value="apache">
+				<cfif application.config.web_server_config.version eq '2.4'>
+					<!--- okay. --->
+					<cfif server.os.name contains 'Ubuntu'>
+						<cfreturn createObject('component', 'com.web_servers.apache24_ubuntu').init()>
+					<cfelseif server.os.name contains 'OS X'>
+						<cfreturn createObject('component', 'com.web_servers.apache24').init()>
+					<cfelse>
+						<cfthrow message="Not sure if I can help you. you are probably just like OSX, si?" />
+					</cfif>
+				<cfelse>
+					<cfthrow message="I didnt know apache version went that high." />
+				</cfif>
+			</cfcase>
+			<cfdefaultcase>
+				<cfthrow message="unsupported web server." />
+			</cfdefaultcase>
+		</cfswitch>
+	</cffunction>
+
+	<cffunction name="init" access="package">
+		<!--- load all sites information from the api --->
+		<!--- for dev servers, ignore demo sites. for production servers ignore dev sites? --->
+		<!--- also get server defautl sites. --->
+		<cfset var args = ''>
+		<cfset var temp = []>
+
+		<!--- the default local sites have to go first (this is so for apache.) --->
+		<cfloop array="#this.get_default_local_sites()#" index="site">
+			<cfset arrayAppend(this.sites, site)>
+		</cfloop>
+		<cfdump var="#this.sites#" label="Line 192 of /Users/alexbrown/Public/www/pfft/com/web_servers/base.cfc">
+		<cfloop array="#this.fake_data#" index="args">
+			<cfif args.hosting_mode neq 'demonstration'>
+				<cfset arrayAppend(this.sites, createObject('component', 'site').init(argumentCollection=args))>
+			</cfif>
+		</cfloop>
+		<cfreturn this>
+	</cffunction>
 
 
-		public string function get_hosts_file_entries(param) {
+
+
+<!--- 		public string function get_hosts_file_entries(param) {
 			// this would only ever be used on local machines - .dev and then maybe if we know devel version of a site is on same url but diff ip/server. like we did with fce16
 			// but we aren't making these changes for you, just providing them for you to paste in.
 			// if you don't like using .dev, make a switch based on machine name.
@@ -200,5 +217,6 @@ component output="false" displayname="" {
 		}
 
 
-	}
+	} --->
 
+</cfcomponent>

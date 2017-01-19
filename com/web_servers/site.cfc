@@ -8,6 +8,8 @@
 
 component output="false" displayname="site - in the context of a web server." accessors="true"  {
 
+	this.web_root = '';
+
 	public function init(){
 		this.canonical_domain_name = arguments.canonical_domain_name ?: '';
 		this.alias_domain_names = arguments.alias_domain_names ?: arrayNew(1);
@@ -23,9 +25,10 @@ component output="false" displayname="site - in the context of a web server." ac
 		this.type = arguments.type ?: '';
 		this.created_date = arguments.created_date ?: '';
 		this.expiration_date = arguments.expiration_date ?: '';
+		this.web_root = arguments.web_root ?: application.config.pfft_root & 'sites/' & this.sys_name & '/www/';
+		this.comment = arguments.comment ?: '';
 
 		if(not len(this.sys_name)) throw "invalid sys_name for site [#this.name#] (No. #this.id#)";
-		this.web_root = application.config.pfft_root & 'sites/' & this.sys_name & '/www/';
 		return this;
 	}
 }
